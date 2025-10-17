@@ -35,7 +35,7 @@ public class ArrayList<T> implements List<T> {
 
     private void checkIndex(int index, boolean allowEqualSize) {
         if (index < 0 || index > size || (!allowEqualSize && index == size)) {
-            throw new ArrayListIndexOutOfBoundsException("Index out of bounds: " + index);
+            throw new ArrayListIndexOutOfBoundsException("Index is out of bounds, for index: " + index);
         }
     }
 
@@ -102,8 +102,7 @@ public class ArrayList<T> implements List<T> {
     public T remove(int index) {
         checkIndex(index,false);
         T removedValue = (T) dataArray[index];
-        System.arraycopy(dataArray, index + 1, dataArray, index, size - index - 1);
-        size--;
+        shiftLeftFromIndex(index);
         return removedValue;
     }
 
