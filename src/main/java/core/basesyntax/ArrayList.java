@@ -1,6 +1,5 @@
 package core.basesyntax;
 
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 public class ArrayList<T> implements List<T> {
@@ -15,23 +14,42 @@ public class ArrayList<T> implements List<T> {
         this.size = 0;
     }
 
-    private boolean sizeCheck() {
+    private boolean isArrayFull() {
         return size == dataArray.length;
     }
 
-    private void grow(int minCapacity) {
+    private int getNewCapacity(int minCapacity) {
         int oldCapacity = dataArray.length;
         int newCapacity = oldCapacity + (oldCapacity >> 1);
         if (newCapacity < minCapacity) {
             newCapacity = minCapacity;
         }
-        dataArray = Arrays.copyOf(dataArray, newCapacity);
+        return newCapacity;
+    }
+
+    private void grow(int newCapacity) {
+        Object[] newArray = new Object[newCapacity];
+        System.arraycopy(dataArray, 0, newArray, 0, size);
+        dataArray = newArray;
+    }
+
+    private void checkIndex(int index, boolean allowEqualSize) {
+        if (index < 0 || index > size || (!allowEqualSize && index == size)) {
+            throw new ArrayListIndexOutOfBoundsException("Index out of bounds: " + index);
+        }
+    }
+
+    private void shiftLeftFromIndex(int index) {
+        System.arraycopy(dataArray, index + 1, dataArray, index, size - index - 1);
+        dataArray[size - 1] = null;
+        size--;
     }
 
     @Override
     public void add(T value) {
-        if (sizeCheck()) {
-            grow(size + 1);
+        if (isArrayFull()) {
+            int newCapacity = getNewCapacity(size + 1);
+            grow(newCapacity);
         }
         dataArray[size] = value;
         size++;
@@ -39,11 +57,10 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public void add(T value, int index) {
-        if (index > size || index < 0) {
-            throw new ArrayListIndexOutOfBoundsException("Index out of bounds: " + index);
-        }
-        if (sizeCheck()) {
-            grow(size + 1);
+        checkIndex(index,true);
+        if (isArrayFull()) {
+            int newCapacity = getNewCapacity(size + 1);
+            grow(newCapacity);
         }
         System.arraycopy(dataArray, index, dataArray, index + 1, size - index);
         dataArray[index] = value;
@@ -58,7 +75,8 @@ public class ArrayList<T> implements List<T> {
 
         int newSize = size + list.size();
         if (newSize > dataArray.length) {
-            grow(newSize);
+            int newCapacity = getNewCapacity(newSize);
+            grow(newCapacity);
         }
 
         for (int i = 0; i < list.size(); i++) {
@@ -70,25 +88,19 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public T get(int index) {
-        if (index >= size || index < 0) {
-            throw new ArrayListIndexOutOfBoundsException("Index out of bounds: " + index);
-        }
+        checkIndex(index,false);
         return (T) dataArray[index];
     }
 
     @Override
     public void set(T value, int index) {
-        if (index >= size || index < 0) {
-            throw new ArrayListIndexOutOfBoundsException("Index out of bounds: " + index);
-        }
+        checkIndex(index,false);
         dataArray[index] = value;
     }
 
     @Override
     public T remove(int index) {
-        if (index < 0 || index >= size) {
-            throw new ArrayListIndexOutOfBoundsException("Index out of bounds: " + index);
-        }
+        checkIndex(index,false);
         T removedValue = (T) dataArray[index];
         System.arraycopy(dataArray, index + 1, dataArray, index, size - index - 1);
         size--;
@@ -101,11 +113,7 @@ public class ArrayList<T> implements List<T> {
             for (int i = 0; i < size; i++) {
                 if (dataArray[i] == null) {
                     final T removedElement = (T) dataArray[i];
-                    for (int j = i; j < size - 1; j++) {
-                        dataArray[j] = dataArray[j + 1];
-                    }
-                    dataArray[size - 1] = null;
-                    size--;
+                    shiftLeftFromIndex(i);
                     return removedElement;
                 }
             }
@@ -113,16 +121,12 @@ public class ArrayList<T> implements List<T> {
             for (int i = 0; i < size; i++) {
                 if (element.equals(dataArray[i])) {
                     final T removedElement = (T) dataArray[i];
-                    for (int j = i; j < size - 1; j++) {
-                        dataArray[j] = dataArray[j + 1];
-                    }
-                    dataArray[size - 1] = null;
-                    size--;
+                    shiftLeftFromIndex(i);
                     return removedElement;
                 }
             }
         }
-        throw new NoSuchElementException("No such element");
+        throw new NoSuchElementException("No such element: " + element);
     }
 
     @Override
