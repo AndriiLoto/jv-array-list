@@ -35,7 +35,8 @@ public class ArrayList<T> implements List<T> {
 
     private void checkIndex(int index, boolean allowEqualSize) {
         if (index < 0 || index > size || (!allowEqualSize && index == size)) {
-            throw new ArrayListIndexOutOfBoundsException("Index is out of bounds, for index: " + index);
+            throw new ArrayListIndexOutOfBoundsException("Index is out of bounds, for index: "
+                    + index);
         }
     }
 
